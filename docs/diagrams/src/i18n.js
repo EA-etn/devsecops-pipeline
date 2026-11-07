@@ -62,6 +62,18 @@ module.exports = {
     'homelab-k3s · on-premise': 'homelab-k3s · on-premise',
     'SLOs · alertas': 'SLOs · alerts',
     'ServiceMonitor · SLOs': 'ServiceMonitor · SLOs',
+    // 02/03 (formato estrecho)
+    'Trivy de la imagen · 3 nodos · sin caída': 'image Trivy scan · 3 nodes · zero downtime',
+    'amd64 · arm64 (QEMU) · smoke test': 'amd64 · arm64 (QEMU) · smoke test',
+    'cert. + registro': 'cert + log',
+    'firma sin claves': 'no keys to manage',
+    // 01-general (formato estrecho)
+    'CI · en cada PR': 'CI · on every PR',
+    'CD · en cada merge': 'CD · on every merge',
+    'publica, escanea y firma': 'publishes, scans and signs',
+    'tag': 'tag',
+    'pull': 'pull',
+    'si escala (HPA)': 'when scaled (HPA)',
     // 00-social
     'Cada commit:': 'Every commit:',
     'probado': 'tested',

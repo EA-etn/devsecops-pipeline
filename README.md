@@ -17,6 +17,8 @@ Kubernetes E2E tests on every pull request and GitOps delivery.
 
 <img src="docs/diagrams/en/01-general.svg" alt="Architecture overview: code, CI/CD, supply chain and runtime layers" width="100%">
 
+<sub><a href="https://raw.githubusercontent.com/EA-etn/devsecops-pipeline/main/docs/diagrams/en/01-general.png">🔍 View full size</a></sub>
+
 </div>
 
 ## Why this project
@@ -72,13 +74,19 @@ make help      # every command
 
 <img src="docs/diagrams/en/02-pipeline.svg" alt="CI/CD pipeline: quality checks and k3s E2E on pull requests; build, scan, sign and GitOps on main" width="100%">
 
+<sub><a href="https://raw.githubusercontent.com/EA-etn/devsecops-pipeline/main/docs/diagrams/en/02-pipeline.png">🔍 View full size</a></sub>
+
 ### Supply chain security
 
 <img src="docs/diagrams/en/03-supply-chain.svg" alt="Supply chain: prevention, build, scan and sign, publish and verify" width="100%">
 
+<sub><a href="https://raw.githubusercontent.com/EA-etn/devsecops-pipeline/main/docs/diagrams/en/03-supply-chain.png">🔍 View full size</a></sub>
+
 ### Kubernetes deployment
 
 <img src="docs/diagrams/en/04-kubernetes.svg" alt="Kubernetes: ingress, service, deployment and pods across a Raspberry Pi and a PC" width="100%">
+
+<sub><a href="https://raw.githubusercontent.com/EA-etn/devsecops-pipeline/main/docs/diagrams/en/04-kubernetes.png">🔍 View full size</a></sub>
 
 > The diagrams are code: HTML + [Lucide](https://lucide.dev) icons, exported to animated SVG.
 > See [`docs/diagrams/src`](docs/diagrams/src).
