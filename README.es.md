@@ -17,6 +17,8 @@ de suministro, pruebas E2E en Kubernetes en cada pull request y despliegue GitOp
 
 <img src="docs/diagrams/es/01-general.svg" alt="Arquitectura general: capas de código, CI/CD, cadena de suministro y ejecución" width="100%">
 
+<sub><a href="https://raw.githubusercontent.com/EA-etn/devsecops-pipeline/main/docs/diagrams/es/01-general.png">🔍 Ver a tamaño completo</a></sub>
+
 </div>
 
 ## Por qué este proyecto
@@ -72,13 +74,19 @@ make help      # todos los comandos
 
 <img src="docs/diagrams/es/02-pipeline.svg" alt="Pipeline CI/CD: calidad y E2E en k3s en los PR; build, escaneo, firma y GitOps en main" width="100%">
 
+<sub><a href="https://raw.githubusercontent.com/EA-etn/devsecops-pipeline/main/docs/diagrams/es/02-pipeline.png">🔍 Ver a tamaño completo</a></sub>
+
 ### Seguridad de la cadena de suministro
 
 <img src="docs/diagrams/es/03-supply-chain.svg" alt="Cadena de suministro: prevención, build, escaneo y firma, publicación y verificación" width="100%">
 
+<sub><a href="https://raw.githubusercontent.com/EA-etn/devsecops-pipeline/main/docs/diagrams/es/03-supply-chain.png">🔍 Ver a tamaño completo</a></sub>
+
 ### Despliegue en Kubernetes
 
 <img src="docs/diagrams/es/04-kubernetes.svg" alt="Kubernetes: ingress, service, deployment y pods entre una Raspberry Pi y un PC" width="100%">
+
+<sub><a href="https://raw.githubusercontent.com/EA-etn/devsecops-pipeline/main/docs/diagrams/es/04-kubernetes.png">🔍 Ver a tamaño completo</a></sub>
 
 > Los diagramas son código: HTML + iconos [Lucide](https://lucide.dev), exportados a SVG animado.
 > Ver [`docs/diagrams/src`](docs/diagrams/src).
