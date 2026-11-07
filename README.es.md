@@ -199,6 +199,7 @@ Incidentes reales encontrados al construir este proyecto ([infografía](docs/dia
 | El bot de GitOps no puede hacer push: `GH013 Repository rule violations` | El ruleset de `main` exige checks y `GITHUB_TOKEN` no puede saltárselo | El bot empuja con una **deploy key** SSH incluida en el bypass del ruleset; `paths-ignore` evita que su commit relance el pipeline |
 | Los pods terminan en `Error` al apagarse durante un rolling update | Uvicorn ≥ 0.29 relanza `SIGTERM` tras un apagado limpio: código de salida 143 | `app/serve.py` sale con 0, y un `preStop` con espera para que el Ingress deje de enviar tráfico antes. El CI demuestra 0 peticiones fallidas durante un despliegue |
 | El arreglo pasó el CI y Docker en local, pero en el homelab los pods seguían en `Error` (código 1) | Uvicorn relanza la señal con `signal.raise_signal()` y la política de seguridad del nodo (probablemente AppArmor) lo prohíbe: `PermissionError` | Una subclase de `uvicorn.Server` que no relanza la señal. Un test simula ahora esa restricción. Lección: el CI no es producción; mira el código de salida y los logs reales |
+| `main` y los PR fallan días después: Trivy encuentra **CVE HIGH nuevas** en `zlib` aunque la imagen ejecuta `apt-get upgrade` | La caché de BuildKit en GitHub Actions reutilizaba la capa antigua de `apt-get upgrade`: el comando no cambiaba, así que los parches nunca llegaban | El CI pasa la fecha del día como argumento de build (`APT_CACHE_BUST`) y esa capa se rehace al menos una vez al día. Una caché necesita caducidad |
 
 ## Hoja de ruta
 

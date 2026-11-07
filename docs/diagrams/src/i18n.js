@@ -57,7 +57,7 @@ module.exports = {
     'Uvicorn relanza SIGTERM y la seguridad del nodo lo prohíbe': 'Uvicorn re-raises SIGTERM and the node security policy denies it',
     'No relanzar la señal + preStop: 0 peticiones perdidas': 'Never re-raise + preStop: 0 dropped requests',
     'El CI no es producción: mira el exit code y los logs reales': 'CI is not production: check real exit codes and logs',
-    'Los 9 incidentes están documentados en el README.': 'All 9 incidents are documented in the README.',
+    'Todos los incidentes están documentados en el README.': 'Every incident is documented in the README.',
     // 01-general y 04-kubernetes (actualizados)
     'homelab-k3s · on-premise': 'homelab-k3s · on-premise',
     'SLOs · alertas': 'SLOs · alerts',
