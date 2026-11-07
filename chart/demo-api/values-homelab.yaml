@@ -3,7 +3,7 @@
 # El pipeline de CI actualiza image.tag automáticamente tras cada merge a main.
 
 image:
-  tag: sha-ae24b29
+  tag: sha-c876bb7
 
 replicaCount: 2
 
