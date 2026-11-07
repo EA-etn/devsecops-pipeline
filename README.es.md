@@ -41,12 +41,12 @@ mismas prácticas que usa un equipo de plataforma para entregar software de form
 | ☸️ **Kubernetes** | Helm chart con Pod Security *restricted*, probes, PDB, HPA, topology spread y `helm test` |
 | 🧪 **CI** | E2E en un **clúster k3s efímero de 3 nodos** en cada PR, con rolling update sin caída |
 | 🔄 **GitOps** | Commit automático del tag de imagen tras cada merge + `Application` de ArgoCD (auto-sync, self-heal, prune) |
-| 📊 **Observabilidad** | Endpoint `/metrics` en formato Prometheus |
+| 📊 **Observabilidad** | `/metrics` en formato Prometheus + `ServiceMonitor`. En el [homelab](https://github.com/EA-etn/homelab-k3s): dashboards de Grafana, SLOs y alertas por burn rate a Telegram |
 
 ## Inicio rápido
 
 ```bash
-docker run -p 8000:8000 ghcr.io/ea-etn/demo-api:0.2.0
+docker run -p 8000:8000 ghcr.io/ea-etn/demo-api:0.3.0
 curl localhost:8000/info
 ```
 
@@ -62,7 +62,7 @@ make help      # todos los comandos
 | Endpoint | Descripción |
 |---|---|
 | `/health` | Health check (Docker `HEALTHCHECK` y probes de Kubernetes) |
-| `/info` | Hostname (= nombre del pod), versión y hora UTC |
+| `/info` | Nombre del pod, nodo, arquitectura de CPU, versión y hora UTC |
 | `/metrics` | Métricas Prometheus (peticiones, latencias, códigos) |
 | `/docs` | Documentación interactiva (Swagger) |
 
@@ -88,7 +88,7 @@ make help      # todos los comandos
 Cualquiera puede comprobar que una imagen la construyó este pipeline y que no fue alterada:
 
 ```bash
-cosign verify ghcr.io/ea-etn/demo-api:0.2.0 \
+cosign verify ghcr.io/ea-etn/demo-api:0.3.0 \
   --certificate-identity-regexp '^https://github.com/EA-etn/devsecops-pipeline/\.github/workflows/ci\.yml@refs/(heads/main|tags/v.*)$' \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
 ```
@@ -99,7 +99,7 @@ cosign verify ghcr.io/ea-etn/demo-api:0.2.0 \
 Ver el SBOM:
 
 ```bash
-docker buildx imagetools inspect ghcr.io/ea-etn/demo-api:0.2.0 --format '{{ json .SBOM }}'
+docker buildx imagetools inspect ghcr.io/ea-etn/demo-api:0.3.0 --format '{{ json .SBOM }}'
 ```
 
 | Control | Herramienta | Cuándo |
@@ -139,11 +139,8 @@ Tras cada merge a `main`, el job `gitops` escribe la versión exacta de la image
 en `chart/demo-api/values-homelab.yaml`. ArgoCD detecta el cambio en Git y lo despliega:
 **nadie necesita acceso al clúster para desplegar.**
 
-```bash
-kubectl create namespace argocd
-kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
-kubectl apply -f deploy/argocd/application.yaml
-```
+La `Application` de ArgoCD vive en el repo del clúster, [homelab-k3s](https://github.com/EA-etn/homelab-k3s) (`apps/demo-api.yaml`),
+gestionada con el patrón App of Apps junto a la monitorización y las alertas.
 
 | Situación | Qué hace ArgoCD |
 |---|---|
@@ -177,7 +174,6 @@ Publica una release desde GitHub (**Releases → Draft a new release**, tag `vX.
 ├── chart/demo-api/            # Helm chart
 │   ├── values.yaml              #   valores por defecto
 │   └── values-homelab.yaml      #   entorno homelab (actualizado por GitOps)
-├── deploy/argocd/               # Application de ArgoCD
 ├── docs/diagrams/               # Diagramas de arquitectura animados (+ fuente)
 ├── .github/workflows/ci.yml     # Pipeline CI/CD
 ├── .github/dependabot.yml       # Actualizaciones automáticas
@@ -203,13 +199,16 @@ Incidentes reales encontrados al construir este proyecto ([infografía](docs/dia
 | El bot de GitOps no puede hacer push: `GH013 Repository rule violations` | El ruleset de `main` exige checks y `GITHUB_TOKEN` no puede saltárselo | El bot empuja con una **deploy key** SSH incluida en el bypass del ruleset; `paths-ignore` evita que su commit relance el pipeline |
 | Los pods terminan en `Error` al apagarse durante un rolling update | Uvicorn ≥ 0.29 relanza `SIGTERM` tras un apagado limpio: código de salida 143 | `app/serve.py` sale con 0, y un `preStop` con espera para que el Ingress deje de enviar tráfico antes. El CI demuestra 0 peticiones fallidas durante un despliegue |
 | El arreglo pasó el CI y Docker en local, pero en el homelab los pods seguían en `Error` (código 1) | Uvicorn relanza la señal con `signal.raise_signal()` y la política de seguridad del nodo (probablemente AppArmor) lo prohíbe: `PermissionError` | Una subclase de `uvicorn.Server` que no relanza la señal. Un test simula ahora esa restricción. Lección: el CI no es producción; mira el código de salida y los logs reales |
+| `main` y los PR fallan días después: Trivy encuentra **CVE HIGH nuevas** en `zlib` aunque la imagen ejecuta `apt-get upgrade` | La caché de BuildKit en GitHub Actions reutilizaba la capa antigua de `apt-get upgrade`: el comando no cambiaba, así que los parches nunca llegaban | El CI pasa la fecha del día como argumento de build (`APT_CACHE_BUST`) y esa capa se rehace al menos una vez al día. Una caché necesita caducidad |
 
 ## Hoja de ruta
 
 - [x] Pipeline CI/CD seguro con imágenes multi-arquitectura firmadas
 - [x] Helm chart probado en k3s en cada pull request
-- [ ] Homelab k3s (Raspberry Pi + PC) con ArgoCD
-- [ ] Observabilidad: Prometheus, Grafana y SLOs
+- [x] Despliegues sin caída: apagado limpio probado con tráfico continuo en el CI
+- [x] Homelab k3s (Raspberry Pi + PC) con ArgoCD → [homelab-k3s](https://github.com/EA-etn/homelab-k3s)
+- [x] Observabilidad: Prometheus, Grafana, SLOs y alertas con runbooks → [homelab-k3s](https://github.com/EA-etn/homelab-k3s)
+- [ ] Chaos engineering en el homelab
 - [ ] Infraestructura cloud con Terraform
 
 ## Licencia

@@ -41,12 +41,12 @@ practices a platform team uses to ship software safely.
 | ☸️ **Kubernetes** | Helm chart with *restricted* Pod Security, probes, PDB, HPA, topology spread and `helm test` |
 | 🧪 **CI** | E2E on an ephemeral **3-node k3s cluster** in every PR, including a zero-downtime rolling update |
 | 🔄 **GitOps** | Automatic image-tag commit after each merge + ArgoCD `Application` (auto-sync, self-heal, prune) |
-| 📊 **Observability** | `/metrics` endpoint in Prometheus format |
+| 📊 **Observability** | `/metrics` in Prometheus format + `ServiceMonitor`. In the [homelab](https://github.com/EA-etn/homelab-k3s): Grafana dashboards, SLOs, burn-rate alerts to Telegram |
 
 ## Quick start
 
 ```bash
-docker run -p 8000:8000 ghcr.io/ea-etn/demo-api:0.2.0
+docker run -p 8000:8000 ghcr.io/ea-etn/demo-api:0.3.0
 curl localhost:8000/info
 ```
 
@@ -62,7 +62,7 @@ make help      # every command
 | Endpoint | Description |
 |---|---|
 | `/health` | Health check (Docker `HEALTHCHECK` and Kubernetes probes) |
-| `/info` | Hostname (= pod name), version and UTC time |
+| `/info` | Pod name, node, CPU architecture, version and UTC time |
 | `/metrics` | Prometheus metrics (requests, latency, status codes) |
 | `/docs` | Interactive API docs (Swagger) |
 
@@ -88,7 +88,7 @@ make help      # every command
 Anyone can check that an image was built by this pipeline and was not tampered with:
 
 ```bash
-cosign verify ghcr.io/ea-etn/demo-api:0.2.0 \
+cosign verify ghcr.io/ea-etn/demo-api:0.3.0 \
   --certificate-identity-regexp '^https://github.com/EA-etn/devsecops-pipeline/\.github/workflows/ci\.yml@refs/(heads/main|tags/v.*)$' \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
 ```
@@ -99,7 +99,7 @@ cosign verify ghcr.io/ea-etn/demo-api:0.2.0 \
 Inspect the SBOM:
 
 ```bash
-docker buildx imagetools inspect ghcr.io/ea-etn/demo-api:0.2.0 --format '{{ json .SBOM }}'
+docker buildx imagetools inspect ghcr.io/ea-etn/demo-api:0.3.0 --format '{{ json .SBOM }}'
 ```
 
 | Control | Tool | When |
@@ -139,11 +139,8 @@ After each merge to `main`, the `gitops` job writes the exact image tag (`sha-xx
 `chart/demo-api/values-homelab.yaml`. ArgoCD notices the change in Git and deploys it:
 **nobody needs cluster access to deploy.**
 
-```bash
-kubectl create namespace argocd
-kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
-kubectl apply -f deploy/argocd/application.yaml
-```
+The ArgoCD `Application` lives in the cluster repo, [homelab-k3s](https://github.com/EA-etn/homelab-k3s) (`apps/demo-api.yaml`),
+managed with the App of Apps pattern alongside monitoring and alerting.
 
 | Situation | What ArgoCD does |
 |---|---|
@@ -177,7 +174,6 @@ Publish a release from GitHub (**Releases → Draft a new release**, tag `vX.Y.Z
 ├── chart/demo-api/            # Helm chart
 │   ├── values.yaml              #   defaults
 │   └── values-homelab.yaml      #   homelab environment (updated by GitOps)
-├── deploy/argocd/               # ArgoCD Application
 ├── docs/diagrams/               # Animated architecture diagrams (+ source)
 ├── .github/workflows/ci.yml     # Pipeline CI/CD
 ├── .github/dependabot.yml       # Automatic updates
@@ -203,13 +199,16 @@ Real incidents hit while building this project ([infographic](docs/diagrams/en/0
 | The GitOps bot cannot push: `GH013 Repository rule violations` | The `main` ruleset requires status checks, and `GITHUB_TOKEN` cannot bypass it | The bot pushes with an SSH **deploy key** listed as a ruleset bypass; `paths-ignore` stops its commit from re-triggering the pipeline |
 | Pods end in `Error` when they shut down during a rolling update | Uvicorn ≥ 0.29 re-raises `SIGTERM` after a clean shutdown: exit code 143 | `app/serve.py` exits with 0, plus a `preStop` sleep so the Ingress stops routing first. CI proves 0 failed requests during a rollout |
 | The fix passed CI and local Docker, but in the homelab pods still ended in `Error` (exit 1) | Uvicorn re-raises the signal with `signal.raise_signal()`, and the node's security policy (most likely AppArmor) denies it: `PermissionError` | A `uvicorn.Server` subclass that never re-raises the signal. A test now simulates that restriction. Lesson: CI and production are not the same environment, so check the real exit code and logs |
+| `main` and PRs fail days later: Trivy finds **new HIGH CVEs** in `zlib` even though the image runs `apt-get upgrade` | The BuildKit cache in GitHub Actions reused the old `apt-get upgrade` layer: the command text never changed, so the patches never arrived | The CI passes today's date as a build argument (`APT_CACHE_BUST`), so that layer is rebuilt at least once a day. A cache must have an expiry |
 
 ## Roadmap
 
 - [x] Secure CI/CD pipeline with multi-arch, signed images
 - [x] Helm chart tested on k3s in every pull request
-- [ ] Homelab k3s cluster (Raspberry Pi + PC) with ArgoCD
-- [ ] Observability: Prometheus, Grafana and SLOs
+- [x] Zero-downtime rollouts: graceful shutdown proven with continuous traffic in CI
+- [x] Homelab k3s cluster (Raspberry Pi + PC) with ArgoCD → [homelab-k3s](https://github.com/EA-etn/homelab-k3s)
+- [x] Observability: Prometheus, Grafana, SLOs and alerts with runbooks → [homelab-k3s](https://github.com/EA-etn/homelab-k3s)
+- [ ] Chaos engineering on the homelab
 - [ ] Cloud infrastructure with Terraform
 
 ## License

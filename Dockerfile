@@ -13,7 +13,11 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 # Parches de seguridad del sistema base: la imagen oficial tarda en publicarse
 # tras una CVE nueva, y la puerta de calidad de Trivy bloquea si hay arreglo disponible.
-RUN apt-get update \
+# APT_CACHE_BUST (la fecha, desde el CI) invalida esta capa cada día: si no, la caché
+# de BuildKit reutilizaría un "apt-get upgrade" antiguo y nunca llegarían los parches.
+ARG APT_CACHE_BUST=local
+RUN echo "Parches del sistema: ${APT_CACHE_BUST}" \
+ && apt-get update \
  && apt-get upgrade -y --no-install-recommends \
  && rm -rf /var/lib/apt/lists/*
 
