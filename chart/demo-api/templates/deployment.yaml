@@ -88,6 +88,10 @@ spec:
         - maxSkew: {{ .Values.topologySpread.maxSkew }}
           topologyKey: kubernetes.io/hostname
           whenUnsatisfiable: {{ .Values.topologySpread.whenUnsatisfiable }}
+          {{- with .Values.topologySpread.nodeTaintsPolicy }}
+          # Honor: los nodos con taints (p. ej. un nodo caído) no cuentan para el reparto
+          nodeTaintsPolicy: {{ . }}
+          {{- end }}
           labelSelector:
             matchLabels:
               {{- include "demo-api.selectorLabels" . | nindent 14 }}

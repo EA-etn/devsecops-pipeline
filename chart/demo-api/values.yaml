@@ -100,7 +100,12 @@ podDisruptionBudget:
 topologySpread:
   enabled: true
   maxSkew: 1
+  # ScheduleAnyway: preferencia (el planificador puede ignorarla).
+  # DoNotSchedule: obligatorio; combínalo con nodeTaintsPolicy: Honor para que un nodo caído
+  # no bloquee los pods nuevos.
   whenUnsatisfiable: ScheduleAnyway
+  # Vacío = comportamiento por defecto de Kubernetes (Ignore). Opciones: Honor, Ignore
+  nodeTaintsPolicy: ""
 
 # Requiere el CRD de Prometheus Operator (kube-prometheus-stack)
 serviceMonitor:
