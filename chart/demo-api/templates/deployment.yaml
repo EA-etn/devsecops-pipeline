@@ -91,6 +91,9 @@ spec:
           labelSelector:
             matchLabels:
               {{- include "demo-api.selectorLabels" . | nindent 14 }}
+          # Solo cuenta los pods de la misma versión (si no, tras un rolling update todos acaban en un nodo)
+          matchLabelKeys:
+            - pod-template-hash
       {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
