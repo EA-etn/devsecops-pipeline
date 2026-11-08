@@ -21,6 +21,11 @@ autoscaling:
   minReplicas: 2
   maxReplicas: 4
 
+# Una réplica en cada nodo (Pi y PC); si un nodo cae, no cuenta y los pods van al otro
+topologySpread:
+  whenUnsatisfiable: DoNotSchedule
+  nodeTaintsPolicy: Honor
+
 # Prometheus (kube-prometheus-stack en el homelab) recoge /metrics con este ServiceMonitor
 serviceMonitor:
   enabled: true
