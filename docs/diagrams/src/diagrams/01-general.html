@@ -1,4 +1,4 @@
-<!-- size: 1200x1190 -->
+<!-- size: 1200x1218 -->
 <!-- Formato estrecho y alto: en la columna del README (~830 px) el texto se lee sin ampliar -->
 <div class="title">
   <div class="eyebrow">DevSecOps Pipeline · arquitectura general</div>
@@ -33,7 +33,7 @@
 <div class="zone" style="--c:var(--orange);left:840px;top:140px;width:320px;height:540px"><div class="zl">ghcr.io</div></div>
 <div class="card col" id="img" style="--c:var(--orange);left:860px;top:195px;width:280px">
   <div class="head"><div class="ico"><i data-icon="container"></i></div>
-    <div><h3>Imagen</h3><div class="sub mono">demo-api:0.3.0</div></div></div>
+    <div><h3>Imagen</h3><div class="sub mono">demo-api:sha-…</div></div></div>
   <div class="pills" style="--c:var(--orange)"><span class="pill mono">amd64</span><span class="pill mono">arm64</span></div>
 </div>
 <div class="card col" id="sig" style="--c:var(--orange);left:860px;top:465px;width:280px">
@@ -43,14 +43,22 @@
 </div>
 
 <!-- Capa de ejecución -->
-<div class="zone" style="--c:var(--green);left:40px;top:740px;width:1120px;height:340px"><div class="zl">homelab-k3s · on-premise</div></div>
+<div class="zone" style="--c:var(--green);left:40px;top:740px;width:1120px;height:368px"><div class="zl">homelab-k3s · on-premise</div></div>
 <div class="card" id="argo" style="--c:var(--green);left:60px;top:795px;width:300px">
   <div class="ico"><i data-icon="refresh-cw"></i></div>
   <div><h3>ArgoCD</h3><div class="sub">sync · self-heal</div></div>
 </div>
-<div class="card" id="obs" style="--c:var(--green);left:60px;top:940px;width:300px">
+<div class="card" id="obs" style="--c:var(--green);left:60px;top:968px;width:300px">
   <div class="ico"><i data-icon="activity"></i></div>
   <div><h3>Prometheus</h3><div class="sub">SLOs · alertas</div></div>
+</div>
+<div class="card" id="alert" style="--c:var(--green);left:420px;top:968px;width:340px">
+  <div class="ico"><i data-icon="bell-ring"></i></div>
+  <div><h3>Alertas a Telegram</h3><div class="sub">con enlace al runbook</div></div>
+</div>
+<div class="card" id="dms" style="--c:var(--green);left:820px;top:968px;width:320px">
+  <div class="ico"><i data-icon="heart-pulse"></i></div>
+  <div><h3>Dead man's switch</h3><div class="sub">avisa si las alertas callan</div></div>
 </div>
 <div class="card col" id="pi" style="--c:var(--green);left:420px;top:795px;width:340px">
   <div class="head"><div class="ico"><i data-icon="cpu"></i></div>
@@ -63,7 +71,7 @@
   <div class="pills" style="--c:var(--green)"><span class="pill mono">● demo-api</span></div>
 </div>
 
-<div class="legend" style="top:1120px">
+<div class="legend" style="top:1148px">
   <span style="--c:var(--purple)"><i></i>Código</span>
   <span style="--c:var(--blue)"><i></i>CI/CD</span>
   <span style="--c:var(--orange)"><i></i>Cadena de suministro</span>
@@ -80,4 +88,6 @@ wire('cd:left@0.6', 'repo:right@0.75', { label: 'tag', color: '#10b981', dashed:
 wire('repo:bottom@0.9', 'argo:top@0.9', { label: 'lee Git', color: '#10b981', labelColor: '#10b981' });
 wire('argo:right', 'pi:left@0.35', { label: 'sync' });
 wire('sig:bottom', 'pc:top', { label: 'pull' });
+wire('obs:right', 'alert:left');
+wire('alert:right', 'dms:left', { dashed: true });
 </script>

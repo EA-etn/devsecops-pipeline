@@ -2,6 +2,13 @@
 // Los textos que no aparecen aquí se dejan igual (nombres de herramientas, etc.).
 module.exports = {
   en: {
+    // Añadidos en la revisión de diagramas
+    'Alertas a Telegram': 'Alerts to Telegram',
+    'con enlace al runbook': 'with a runbook link',
+    'avisa si las alertas callan': 'warns if alerts go silent',
+    'El pipeline, paso a paso': 'The pipeline, step by step',
+    'crea y actualiza los pods': 'creates and updates the pods',
+    'Los 13 incidentes, en docs/lessons-learned.es.md': 'All 13 incidents: docs/lessons-learned.md',
     // 05-incidents
     'Causa': 'Cause',
     'Arreglo': 'Fix',

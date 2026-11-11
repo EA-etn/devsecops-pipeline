@@ -34,6 +34,19 @@ practices a platform team uses to ship software safely.
 - **Git is the source of truth:** the pipeline writes the exact version to deploy, and ArgoCD
   syncs the cluster from Git.
 
+## In numbers
+
+| | |
+|---|---|
+| ⏱️ **~3 min** | From opening a pull request to a verdict, including a real deployment on a 3-node Kubernetes cluster |
+| 🚀 **~2 min** | From merge to a scanned, signed image in the registry and the GitOps commit |
+| ✅ **0** | Failed requests tolerated during a rolling update. CI sends continuous traffic and fails on the first error |
+| 🛡️ **2** | Vulnerable images stopped by the security gate on `main` before they were signed or deployed |
+| 🔁 **19** | Deployments to the homelab so far. Every one is a Git commit made by the pipeline, none a manual `kubectl` |
+| 📓 **13** | Real incidents [written up](docs/lessons-learned.md) with root cause and fix |
+
+<sub>Times are the median of the last 20 pipeline runs (November 2026).</sub>
+
 ## Highlights
 
 | Area | What you get |
@@ -179,11 +192,12 @@ Publish a release from GitHub (**Releases → Draft a new release**, tag `vX.Y.Z
 .
 ├── app/                         # FastAPI application
 ├── tests/                       # pytest
-├── chart/demo-api/            # Helm chart
+├── chart/demo-api/              # Helm chart
 │   ├── values.yaml              #   defaults
 │   └── values-homelab.yaml      #   homelab environment (updated by GitOps)
 ├── docs/diagrams/               # Animated architecture diagrams (+ source)
-├── .github/workflows/ci.yml     # Pipeline CI/CD
+├── docs/lessons-learned.md      # Every incident: root cause and fix
+├── .github/workflows/ci.yml     # The whole CI/CD pipeline
 ├── .github/dependabot.yml       # Automatic updates
 ├── Dockerfile
 └── Makefile
@@ -193,23 +207,18 @@ Publish a release from GitHub (**Releases → Draft a new release**, tag `vX.Y.Z
 
 ## Lessons learned
 
-Real incidents hit while building this project ([infographic](docs/diagrams/en/05-incidents.png)):
+Thirteen real incidents came up while building this, each written up with its root cause and fix.
+Five that changed how the project works:
 
-| Problem | Root cause | Fix |
-|---|---|---|
-| `docker build` fails with **429 Too Many Requests** | Docker Hub anonymous pull limit | Pull the base image from a mirror (`mirror.gcr.io`) |
-| `pip` fails inside the build: *certificate verify failed* | A corporate proxy intercepts HTTPS | Inject the proxy CA **only** in a local build stage, never in the final image |
-| `trivy-action` fails to install Trivy | Its install script could not download the binary | Run the official Trivy image **pinned by digest** (also more secure) |
-| Rolling update fails: *annotations: expected string* | The chart did not quote numeric annotations | `quote` in the template, caught by the k3s E2E test |
-| Trivy and Cosign fail on `main`: *could not parse reference* | `github.repository` keeps uppercase (`EA-etn`); Docker needs lowercase | Normalize with `${IMAGE,,}`. Steps that only run on `main` need coverage too |
-| A release does not trigger the pipeline | The tagged commit contained the **skip-CI** marker; GitHub also reads it from PR titles in merge commits | Drop the marker from the bot commit (`GITHUB_TOKEN` pushes never trigger workflows) and keep it out of PR titles |
-| `main` fails right after a merge: Trivy finds a **new HIGH CVE** in `apt` | Disclosed hours after the PR passed; the official base image was not patched yet | `apt-get upgrade` in the final stage. The gate worked: the image was neither signed nor deployed |
-| The GitOps bot cannot push: `GH013 Repository rule violations` | The `main` ruleset requires status checks, and `GITHUB_TOKEN` cannot bypass it | The bot pushes with an SSH **deploy key** listed as a ruleset bypass; `paths-ignore` stops its commit from re-triggering the pipeline |
-| Pods end in `Error` when they shut down during a rolling update | Uvicorn ≥ 0.29 re-raises `SIGTERM` after a clean shutdown: exit code 143 | `app/serve.py` exits with 0, plus a `preStop` sleep so the Ingress stops routing first. CI proves 0 failed requests during a rollout |
-| The fix passed CI and local Docker, but in the homelab pods still ended in `Error` (exit 1) | Uvicorn re-raises the signal with `signal.raise_signal()`, and the node's security policy (most likely AppArmor) denies it: `PermissionError` | A `uvicorn.Server` subclass that never re-raises the signal. A test now simulates that restriction. Lesson: CI and production are not the same environment, so check the real exit code and logs |
-| `main` and PRs fail days later: Trivy finds **new HIGH CVEs** in `zlib` even though the image runs `apt-get upgrade` | The BuildKit cache in GitHub Actions reused the old `apt-get upgrade` layer: the command text never changed, so the patches never arrived | The CI passes today's date as a build argument (`APT_CACHE_BUST`), so that layer is rebuilt at least once a day. A cache must have an expiry |
-| After every rollout, **both replicas end up on the same node** even though both nodes are healthy | The spread rule (`ScheduleAnyway`) also counted the old pods that were about to be terminated, so the new ones looked balanced while landing on the same node | `matchLabelKeys: [pod-template-hash]`: only pods of the same revision are counted. Spotted in the homelab with `/info`, the Pi ruled out first (`Ready`, no taints or pressure) |
-| After rebooting the laptop worker, **both replicas stayed on the Raspberry Pi** | Kubernetes evicted the pod from the unreachable node after ~5 min and recreated it on the Pi; when the node came back nothing moved it, because the scheduler only places pods when they are created, and the spread rule was only a preference | In the homelab the spread rule is mandatory (`DoNotSchedule`) with `nodeTaintsPolicy: Honor`, so a down node does not block new pods. The next rollout rebalances; automatic rebalancing (Descheduler) comes with chaos engineering |
+| What broke | What it taught |
+|---|---|
+| A **new HIGH CVE** appeared in `apt` hours after a pull request passed | The gate did its job on `main`: the image was **neither signed nor deployed**. Scanning only at PR time is not enough |
+| Days later, new CVEs in `zlib` even though the image runs `apt-get upgrade` | The build cache had frozen that layer. **A cache needs an expiry**: the layer now rebuilds daily |
+| Pods ended in `Error` on every rollout. The fix passed CI but **failed on the real cluster** | The node's security policy denied what CI allowed. **CI is not production**: a test now simulates that restriction |
+| After each rollout, both replicas landed on the **same node** | The spread rule also counted the pods being replaced. One line fixed it: `matchLabelKeys: [pod-template-hash]` |
+| The GitOps bot was **blocked by branch protection** | It now pushes with a deploy key scoped to this repo: **least privilege**, with no admin token |
+
+**→ [All 13, with root cause and fix](docs/lessons-learned.md)** · [infographic](docs/diagrams/en/05-incidents.png)
 
 ## Roadmap
 
@@ -218,7 +227,9 @@ Real incidents hit while building this project ([infographic](docs/diagrams/en/0
 - [x] Zero-downtime rollouts: graceful shutdown proven with continuous traffic in CI
 - [x] Homelab k3s cluster (Raspberry Pi + PC) with ArgoCD → [homelab-k3s](https://github.com/EA-etn/homelab-k3s)
 - [x] Observability: Prometheus, Grafana, SLOs and alerts with runbooks → [homelab-k3s](https://github.com/EA-etn/homelab-k3s)
-- [ ] Chaos engineering on the homelab
+- [x] Dead man's switch and automatic rebalancing across nodes → [homelab-k3s](https://github.com/EA-etn/homelab-k3s)
+- [ ] Chaos engineering on the homelab (in progress)
+- [ ] Rebuild the homelab from scratch with Ansible (code ready, real rebuild pending)
 - [ ] Cloud infrastructure with Terraform
 
 ## License
