@@ -48,7 +48,7 @@ practices a platform team uses to ship software safely.
 ## Quick start
 
 ```bash
-docker run -p 8000:8000 ghcr.io/ea-etn/demo-api:0.3.0
+docker run -p 8000:8000 ghcr.io/ea-etn/demo-api:0.4.0
 curl localhost:8000/info
 ```
 
@@ -96,7 +96,7 @@ make help      # every command
 Anyone can check that an image was built by this pipeline and was not tampered with:
 
 ```bash
-cosign verify ghcr.io/ea-etn/demo-api:0.3.0 \
+cosign verify ghcr.io/ea-etn/demo-api:0.4.0 \
   --certificate-identity-regexp '^https://github.com/EA-etn/devsecops-pipeline/\.github/workflows/ci\.yml@refs/(heads/main|tags/v.*)$' \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
 ```
@@ -107,7 +107,7 @@ cosign verify ghcr.io/ea-etn/demo-api:0.3.0 \
 Inspect the SBOM:
 
 ```bash
-docker buildx imagetools inspect ghcr.io/ea-etn/demo-api:0.3.0 --format '{{ json .SBOM }}'
+docker buildx imagetools inspect ghcr.io/ea-etn/demo-api:0.4.0 --format '{{ json .SBOM }}'
 ```
 
 | Control | Tool | When |
