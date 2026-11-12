@@ -1,76 +1,60 @@
 <!-- size: 1080x1350 -->
-<!-- Infografía de errores reales (formato vertical para LinkedIn) -->
+<!-- Infografía de incidentes (formato vertical para LinkedIn). Poco texto a propósito:
+     qué pasó en una frase y la lección. El detalle está en docs/lessons-learned.es.md -->
 <style>
-  .inc{position:absolute;width:480px;height:330px;border:2px solid var(--c);border-radius:18px;background:#13161d;
-    padding:22px 24px;display:flex;flex-direction:column;gap:14px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
-  .inc .ih{display:flex;gap:14px;align-items:center}
-  .inc .ico{width:52px;height:52px}
-  .inc .cat{font:600 12.5px "JetBrains Mono";letter-spacing:.1em;text-transform:uppercase;color:var(--c)}
-  .inc h3{font:700 21px/1.2 Inter;margin-top:4px}
-  .inc .sym{font:500 13.5px/1.45 "JetBrains Mono";color:#fb7185;background:#0b0d12;border:1px solid #2a303c;border-radius:10px;padding:9px 12px}
-  .inc .row{display:flex;gap:12px;font:500 15.5px/1.4 Inter;color:var(--muted)}
-  .inc .row b{flex:none;width:66px;font:600 11.5px "JetBrains Mono";letter-spacing:.08em;text-transform:uppercase;color:#6b7488;padding-top:3px}
-  .inc .row.fix span{color:#e8edf6}
-  .inc .row.les{border-top:1px dashed #2a303c;padding-top:12px;margin-top:auto}
-  .inc .row.les b{color:#10b981}
-  .inc .row.les span{color:#6ee7b7}
-  .foot{position:absolute;left:48px;right:48px;top:1250px;display:flex;justify-content:space-between;align-items:center;
+  .inc{position:absolute;width:480px;height:310px;border:2px solid var(--c);border-radius:18px;background:#13161d;
+    padding:26px 28px;display:flex;flex-direction:column;gap:16px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+  .inc .ih{display:flex;gap:16px;align-items:center}
+  .inc .ico{width:56px;height:56px;flex:none}
+  .inc .cat{font:600 13px "JetBrains Mono";letter-spacing:.1em;text-transform:uppercase;color:var(--c)}
+  .inc h3{font:700 24px/1.2 Inter;margin-top:5px}
+  .inc .what{font:500 18px/1.45 Inter;color:var(--muted)}
+  .inc .les{margin-top:auto;border-top:1px dashed #2a303c;padding-top:16px;font:600 19px/1.4 Inter;color:#6ee7b7}
+  .foot{position:absolute;left:48px;right:48px;top:1240px;display:flex;justify-content:space-between;align-items:center;
     font:500 17px Inter;color:var(--muted);border-top:1px solid #272d3a;padding-top:22px}
   .foot b{font:600 17px "JetBrains Mono";color:var(--text)}
 </style>
 
 <div class="title">
-  <div class="eyebrow">DevSecOps Pipeline · postmortems</div>
-  <h1 style="font-size:40px">6 errores reales y cómo se resolvieron</h1>
-  <p>Síntoma, causa y arreglo de lo que se rompió construyendo el pipeline.</p>
+  <div class="eyebrow">DevSecOps Pipeline · lecciones aprendidas</div>
+  <h1 style="font-size:42px">6 fallos reales y lo que me enseñaron</h1>
+  <p>Lo que se rompió construyendo un pipeline DevSecOps y un homelab de Kubernetes.</p>
 </div>
 
-<div class="inc" style="--c:var(--red);left:48px;top:190px">
+<div class="inc" style="--c:var(--red);left:48px;top:200px">
   <div class="ih"><div class="ico"><i data-icon="shield-alert"></i></div><div><div class="cat">Seguridad · main</div><h3>Una CVE nueva tras el merge</h3></div></div>
-  <div class="sym">Trivy: CVE HIGH en apt → imagen sin firmar</div>
-  <div class="row"><b>Causa</b><span>Se publicó horas después de pasar el PR; la imagen base aún no tenía parche</span></div>
-  <div class="row fix"><b>Arreglo</b><span>apt-get upgrade en la etapa final de la imagen</span></div>
-  <div class="row les"><b>Lección</b><span>La puerta funcionó: nada sin escanear llega al clúster</span></div>
+  <div class="what">Apareció horas después de aprobar el pull request.</div>
+  <div class="les">La puerta funcionó: la imagen ni se firmó ni se desplegó</div>
 </div>
 
-<div class="inc" style="--c:var(--green);left:552px;top:190px">
-  <div class="ih"><div class="ico"><i data-icon="key-round"></i></div><div><div class="cat">GitOps · bot</div><h3>El ruleset bloqueó al bot</h3></div></div>
-  <div class="sym">GH013: Repository rule violations</div>
-  <div class="row"><b>Causa</b><span>GITHUB_TOKEN no puede saltarse los checks obligatorios de main</span></div>
-  <div class="row fix"><b>Arreglo</b><span>Deploy key en el bypass + paths-ignore para evitar un bucle</span></div>
-  <div class="row les"><b>Lección</b><span>Cada automatismo, solo con el permiso que necesita</span></div>
+<div class="inc" style="--c:var(--red);left:552px;top:200px">
+  <div class="ih"><div class="ico"><i data-icon="snowflake"></i></div><div><div class="cat">Seguridad · caché</div><h3>La caché congeló los parches</h3></div></div>
+  <div class="what">El build reutilizaba una capa antigua de apt-get upgrade.</div>
+  <div class="les">Una caché necesita fecha de caducidad</div>
 </div>
 
-<div class="inc" style="--c:var(--cyan);left:48px;top:535px">
-  <div class="ih"><div class="ico"><i data-icon="power"></i></div><div><div class="cat">Kubernetes · apagado</div><h3>Pods en Error en cada despliegue</h3></div></div>
-  <div class="sym">exit 143 → PermissionError (exit 1)</div>
-  <div class="row"><b>Causa</b><span>Uvicorn relanza SIGTERM y la seguridad del nodo lo prohíbe</span></div>
-  <div class="row fix"><b>Arreglo</b><span>No relanzar la señal + preStop: 0 peticiones perdidas</span></div>
-  <div class="row les"><b>Lección</b><span>El CI no es producción: mira el exit code y los logs reales</span></div>
+<div class="inc" style="--c:var(--cyan);left:48px;top:540px">
+  <div class="ih"><div class="ico"><i data-icon="power"></i></div><div><div class="cat">Kubernetes · apagado</div><h3>Pasó el CI, falló en el clúster</h3></div></div>
+  <div class="what">Los pods terminaban en Error cada vez que se apagaban.</div>
+  <div class="les">El CI no es producción: mira los códigos de salida reales</div>
 </div>
 
-<div class="inc" style="--c:var(--cyan);left:552px;top:535px">
-  <div class="ih"><div class="ico"><i data-icon="boxes"></i></div><div><div class="cat">Kubernetes · helm</div><h3>Anotaciones numéricas</h3></div></div>
-  <div class="sym">annotations.rollout: expected string</div>
-  <div class="row"><b>Causa</b><span>--set convierte números y el chart no los ponía entre comillas</span></div>
-  <div class="row fix"><b>Arreglo</b><span>| quote en la plantilla. Lo detectó el test E2E en k3s</span></div>
-  <div class="row les"><b>Lección</b><span>helm lint no basta: hay que desplegar de verdad</span></div>
+<div class="inc" style="--c:var(--cyan);left:552px;top:540px">
+  <div class="ih"><div class="ico"><i data-icon="boxes"></i></div><div><div class="cat">Kubernetes · reparto</div><h3>Dos réplicas en el mismo nodo</h3></div></div>
+  <div class="what">La regla de reparto contaba pods que se iban a borrar.</div>
+  <div class="les">Se arregló con una línea: matchLabelKeys</div>
 </div>
 
-<div class="inc" style="--c:var(--blue);left:48px;top:880px">
-  <div class="ih"><div class="ico"><i data-icon="case-upper"></i></div><div><div class="cat">CI/CD · main</div><h3>"EA-etn" en mayúsculas</h3></div></div>
-  <div class="sym">could not parse reference: ghcr.io/EA-etn/…</div>
-  <div class="row"><b>Causa</b><span>github.repository conserva mayúsculas; Docker exige minúsculas</span></div>
-  <div class="row fix"><b>Arreglo</b><span>IMAGE=${IMAGE,,} al inicio del job</span></div>
-  <div class="row les"><b>Lección</b><span>Lo que solo corre en main también necesita pruebas</span></div>
+<div class="inc" style="--c:var(--green);left:48px;top:880px">
+  <div class="ih"><div class="ico"><i data-icon="key-round"></i></div><div><div class="cat">GitOps · bot</div><h3>La protección de rama bloqueó al bot</h3></div></div>
+  <div class="what">GITHUB_TOKEN no puede saltarse los checks obligatorios.</div>
+  <div class="les">Mínimo privilegio: una deploy key solo para este repo</div>
 </div>
 
 <div class="inc" style="--c:var(--blue);left:552px;top:880px">
-  <div class="ih"><div class="ico"><i data-icon="ban"></i></div><div><div class="cat">CI/CD · release</div><h3>[skip ci] dejó la release sin imagen</h3></div></div>
-  <div class="sym">ningún workflow para el tag v0.1.0</div>
-  <div class="row"><b>Causa</b><span>El commit del tag, y luego el título de un PR, llevaban la marca</span></div>
-  <div class="row fix"><b>Arreglo</b><span>Quitarla: los push con GITHUB_TOKEN no disparan workflows</span></div>
-  <div class="row les"><b>Lección</b><span>Entiende el mecanismo antes de añadir algo "por si acaso"</span></div>
+  <div class="ih"><div class="ico"><i data-icon="flask-conical"></i></div><div><div class="cat">CI · Helm</div><h3>helm lint no lo vio</h3></div></div>
+  <div class="what">Una anotación numérica rompía el despliegue.</div>
+  <div class="les">Hay que desplegar de verdad: lo cazó el E2E en k3s</div>
 </div>
 
-<div class="foot"><span>Los 13 incidentes, en docs/lessons-learned.es.md</span><b>github.com/EA-etn/devsecops-pipeline</b></div>
+<div class="foot"><span>Los 13 incidentes, con causa y solución:</span><b>github.com/EA-etn/devsecops-pipeline</b></div>
