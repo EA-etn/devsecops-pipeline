@@ -29,7 +29,7 @@
 </div>
 <div class="card" id="dep" style="--c:var(--cyan);left:70px;top:670px;width:420px">
   <div class="ico"><i data-icon="boxes"></i></div>
-  <div><h3>Deployment</h3><div class="sub">rolling update sin caída</div></div>
+  <div><h3>Deployment</h3><div class="sub">crea y actualiza los pods</div></div>
 </div>
 <div class="card" id="hpa" style="--c:var(--yellow);left:70px;top:850px;width:200px;padding:16px">
   <div class="ico"><i data-icon="gauge"></i></div>
@@ -72,9 +72,9 @@
 <script>
 wire('user:bottom@0.95', 'ing:top@0.85', { label: 'HTTP' });
 wire('ing:bottom', 'svc:top');
-wire('svc:bottom', 'dep:top');
-wire('dep:right', 'npi:left', { mid: 515 });
-wire('dep:right', 'npc:left', { mid: 515 });
+wire('svc:right', 'npi:left', { mid: 515 });
+wire('svc:right', 'npc:left@0.3', { mid: 515 });
+wire('dep:right', 'npc:left@0.63', { dashed: true });
 wire('hpa:top', 'dep:bottom@0.24', { label: 'escala' });
 wire('pdb:top', 'dep:bottom@0.76', { dashed: true });
 wire('argo:bottom', 'cl:top@0.54', { label: 'sync' });

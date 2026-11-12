@@ -75,7 +75,9 @@ module.exports = function exportSvg() {
 
   // Cables: línea base + puntos de luz que recorren el camino
   function wires(svg) {
-    const paths = [...svg.querySelectorAll('path[d^="M"]')];
+    // Solo los cables: las puntas de flecha (<marker> dentro de <defs>) también son <path>, y
+    // animarlas dibujaba un punto negro dando vueltas en la esquina superior izquierda
+    const paths = [...svg.querySelectorAll('path[d^="M"]')].filter((p) => !p.closest('defs'));
     const anim = [];
     paths.forEach((p, i) => {
       const d = p.getAttribute('d');

@@ -34,6 +34,19 @@ mismas prácticas que usa un equipo de plataforma para entregar software de form
 - **Git es la fuente de verdad:** el pipeline escribe la versión exacta a desplegar y ArgoCD
   sincroniza el clúster desde Git.
 
+## En cifras
+
+| | |
+|---|---|
+| ⏱️ **~3 min** | Desde que se abre un pull request hasta el veredicto, incluido un despliegue real en un clúster de Kubernetes de 3 nodos |
+| 🚀 **~2 min** | Desde el merge hasta tener la imagen escaneada y firmada en el registro, y el commit de GitOps |
+| ✅ **0** | Peticiones fallidas toleradas durante un rolling update. El CI envía tráfico continuo y falla al primer error |
+| 🛡️ **2** | Imágenes vulnerables detenidas por la puerta de seguridad en `main` antes de firmarse o desplegarse |
+| 🔁 **19** | Despliegues en el homelab hasta ahora. Todos son un commit de Git hecho por el pipeline, ninguno un `kubectl` manual |
+| 📓 **13** | Incidentes reales [documentados](docs/lessons-learned.es.md) con su causa y su solución |
+
+<sub>Los tiempos son la mediana de las últimas 20 ejecuciones del pipeline (noviembre de 2026).</sub>
+
 ## Qué incluye
 
 | Área | Qué obtienes |
@@ -179,11 +192,12 @@ Publica una release desde GitHub (**Releases → Draft a new release**, tag `vX.
 .
 ├── app/                         # Aplicación FastAPI
 ├── tests/                       # pytest
-├── chart/demo-api/            # Helm chart
+├── chart/demo-api/              # Helm chart
 │   ├── values.yaml              #   valores por defecto
 │   └── values-homelab.yaml      #   entorno homelab (actualizado por GitOps)
 ├── docs/diagrams/               # Diagramas de arquitectura animados (+ fuente)
-├── .github/workflows/ci.yml     # Pipeline CI/CD
+├── docs/lessons-learned.es.md   # Todos los incidentes: causa y solución
+├── .github/workflows/ci.yml     # Todo el pipeline CI/CD
 ├── .github/dependabot.yml       # Actualizaciones automáticas
 ├── Dockerfile
 └── Makefile
@@ -193,23 +207,18 @@ Publica una release desde GitHub (**Releases → Draft a new release**, tag `vX.
 
 ## Lecciones aprendidas
 
-Incidentes reales encontrados al construir este proyecto ([infografía](docs/diagrams/es/05-incidents.png)):
+Al construir esto aparecieron trece incidentes reales, cada uno documentado con su causa y su
+solución. Cinco que cambiaron cómo funciona el proyecto:
 
-| Problema | Causa | Solución |
-|---|---|---|
-| `docker build` falla con **429 Too Many Requests** | Límite de descargas anónimas de Docker Hub | Usar un mirror (`mirror.gcr.io`) para la imagen base |
-| `pip` falla dentro del build: *certificate verify failed* | Un proxy corporativo intercepta HTTPS | Inyectar la CA del proxy **solo** en una etapa de build local, nunca en la imagen final |
-| `trivy-action` falla al instalar Trivy | El script de instalación no podía descargar el binario | Ejecutar la imagen oficial de Trivy **fijada por digest** (además, más seguro) |
-| El rolling update falla: *annotations: expected string* | El chart no convertía a texto anotaciones numéricas | `quote` en la plantilla; lo detectó el test E2E en k3s |
-| En `main` fallan Trivy y Cosign: *could not parse reference* | `github.repository` conserva mayúsculas (`EA-etn`) y Docker exige minúsculas | Normalizar con `${IMAGE,,}`. Los pasos que solo corren en `main` también necesitan cobertura |
-| Una release no ejecuta el pipeline | El commit del tag contenía la marca para **omitir CI**; GitHub también la lee del título del PR en el commit de merge | Quitar la marca del commit del bot (los push con `GITHUB_TOKEN` no disparan workflows) y no usarla en títulos de PR |
-| `main` falla justo después de un merge: Trivy encuentra una **CVE HIGH nueva** en `apt` | Se publicó horas después de que pasara el PR; la imagen base oficial aún no tenía el parche | `apt-get upgrade` en la etapa final. La puerta funcionó: la imagen no se firmó ni se desplegó |
-| El bot de GitOps no puede hacer push: `GH013 Repository rule violations` | El ruleset de `main` exige checks y `GITHUB_TOKEN` no puede saltárselo | El bot empuja con una **deploy key** SSH incluida en el bypass del ruleset; `paths-ignore` evita que su commit relance el pipeline |
-| Los pods terminan en `Error` al apagarse durante un rolling update | Uvicorn ≥ 0.29 relanza `SIGTERM` tras un apagado limpio: código de salida 143 | `app/serve.py` sale con 0, y un `preStop` con espera para que el Ingress deje de enviar tráfico antes. El CI demuestra 0 peticiones fallidas durante un despliegue |
-| El arreglo pasó el CI y Docker en local, pero en el homelab los pods seguían en `Error` (código 1) | Uvicorn relanza la señal con `signal.raise_signal()` y la política de seguridad del nodo (probablemente AppArmor) lo prohíbe: `PermissionError` | Una subclase de `uvicorn.Server` que no relanza la señal. Un test simula ahora esa restricción. Lección: el CI no es producción; mira el código de salida y los logs reales |
-| `main` y los PR fallan días después: Trivy encuentra **CVE HIGH nuevas** en `zlib` aunque la imagen ejecuta `apt-get upgrade` | La caché de BuildKit en GitHub Actions reutilizaba la capa antigua de `apt-get upgrade`: el comando no cambiaba, así que los parches nunca llegaban | El CI pasa la fecha del día como argumento de build (`APT_CACHE_BUST`) y esa capa se rehace al menos una vez al día. Una caché necesita caducidad |
-| Tras cada despliegue, **las dos réplicas acaban en el mismo nodo** aunque los dos están sanos | La regla de reparto (`ScheduleAnyway`) también contaba los pods viejos que estaban a punto de apagarse, así que los nuevos parecían repartidos aunque caían en el mismo nodo | `matchLabelKeys: [pod-template-hash]`: solo se cuentan los pods de la misma versión. Detectado en el homelab con `/info`, tras descartar primero un problema en la Pi (`Ready`, sin taints ni presión) |
-| Tras reiniciar el portátil (worker), **las dos réplicas se quedaron en la Raspberry Pi** | Kubernetes desalojó el pod del nodo inalcanzable a los ~5 min y lo recreó en la Pi; cuando el nodo volvió nadie lo movió, porque el planificador solo coloca los pods al crearlos, y la regla de reparto era solo una preferencia | En el homelab la regla es obligatoria (`DoNotSchedule`) con `nodeTaintsPolicy: Honor`, para que un nodo caído no bloquee los pods nuevos. El siguiente despliegue reequilibra; el reequilibrio automático (Descheduler) llegará con el chaos engineering |
+| Qué se rompió | Qué enseñó |
+|---|---|
+| Apareció una **CVE HIGH nueva** en `apt` horas después de que pasara un pull request | La puerta hizo su trabajo en `main`: la imagen **ni se firmó ni se desplegó**. Escanear solo en el PR no basta |
+| Días después, CVE nuevas en `zlib` aunque la imagen ejecuta `apt-get upgrade` | La caché del build había congelado esa capa. **Una caché necesita caducidad**: ahora la capa se rehace cada día |
+| Los pods terminaban en `Error` en cada despliegue. El arreglo pasó el CI pero **falló en el clúster real** | La política de seguridad del nodo denegaba lo que el CI permitía. **El CI no es producción**: ahora un test simula esa restricción |
+| Tras cada despliegue, las dos réplicas acababan en el **mismo nodo** | La regla de reparto contaba también los pods que se iban a sustituir. Lo arregló una línea: `matchLabelKeys: [pod-template-hash]` |
+| La protección de rama **bloqueó al bot de GitOps** | Ahora hace push con una deploy key limitada a este repo: **mínimo privilegio**, sin token de administrador |
+
+**→ [Los 13, con causa y solución](docs/lessons-learned.es.md)** · [infografía](docs/diagrams/es/05-incidents.png)
 
 ## Hoja de ruta
 
@@ -218,7 +227,9 @@ Incidentes reales encontrados al construir este proyecto ([infografía](docs/dia
 - [x] Despliegues sin caída: apagado limpio probado con tráfico continuo en el CI
 - [x] Homelab k3s (Raspberry Pi + PC) con ArgoCD → [homelab-k3s](https://github.com/EA-etn/homelab-k3s)
 - [x] Observabilidad: Prometheus, Grafana, SLOs y alertas con runbooks → [homelab-k3s](https://github.com/EA-etn/homelab-k3s)
-- [ ] Chaos engineering en el homelab
+- [x] Dead man's switch y reequilibrio automático entre nodos → [homelab-k3s](https://github.com/EA-etn/homelab-k3s)
+- [ ] Chaos engineering en el homelab (en marcha)
+- [ ] Reconstruir el homelab desde cero con Ansible (código listo, falta la reconstrucción real)
 - [ ] Infraestructura cloud con Terraform
 
 ## Licencia
