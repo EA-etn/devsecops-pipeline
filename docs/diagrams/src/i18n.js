@@ -2,6 +2,33 @@
 // Los textos que no aparecen aquí se dejan igual (nombres de herramientas, etc.).
 module.exports = {
   en: {
+    // 05-incidents (versión ligera)
+    'DevSecOps Pipeline · lecciones aprendidas': 'DevSecOps Pipeline · lessons learned',
+    '6 fallos reales y lo que me enseñaron': '6 real failures and what they taught me',
+    'Lo que se rompió construyendo un pipeline DevSecOps y un homelab de Kubernetes.': 'What broke while building a DevSecOps pipeline and a Kubernetes homelab.',
+    'Seguridad · main': 'Security · main',
+    'Seguridad · caché': 'Security · cache',
+    'Kubernetes · apagado': 'Kubernetes · shutdown',
+    'Kubernetes · reparto': 'Kubernetes · scheduling',
+    'Una CVE nueva tras el merge': 'A new CVE right after the merge',
+    'Apareció horas después de aprobar el pull request.': 'It appeared hours after the pull request passed.',
+    'La puerta funcionó: la imagen ni se firmó ni se desplegó': 'The gate worked: the image was neither signed nor deployed',
+    'La caché congeló los parches': 'The cache froze the patches',
+    'El build reutilizaba una capa antigua de apt-get upgrade.': 'The build kept reusing an old apt-get upgrade layer.',
+    'Una caché necesita fecha de caducidad': 'A cache needs an expiry date',
+    'Pasó el CI, falló en el clúster': 'Passed CI, failed on the cluster',
+    'Los pods terminaban en Error cada vez que se apagaban.': 'Pods ended in Error every time they shut down.',
+    'El CI no es producción: mira los códigos de salida reales': 'CI is not production: check the real exit codes',
+    'Dos réplicas en el mismo nodo': 'Two replicas on the same node',
+    'La regla de reparto contaba pods que se iban a borrar.': 'The spread rule counted pods that were about to be deleted.',
+    'Se arregló con una línea: matchLabelKeys': 'Fixed with one line: matchLabelKeys',
+    'La protección de rama bloqueó al bot': 'Branch protection blocked the bot',
+    'GITHUB_TOKEN no puede saltarse los checks obligatorios.': 'GITHUB_TOKEN cannot bypass the required checks.',
+    'Mínimo privilegio: una deploy key solo para este repo': 'Least privilege: a deploy key for this repo only',
+    'helm lint no lo vio': 'helm lint did not see it',
+    'Una anotación numérica rompía el despliegue.': 'A numeric annotation broke the deployment.',
+    'Hay que desplegar de verdad: lo cazó el E2E en k3s': 'Deploy for real: the k3s E2E test caught it',
+    'Los 13 incidentes, con causa y solución:': 'All 13 incidents, with root cause and fix:',
     // Añadidos en la revisión de diagramas
     'Alertas a Telegram': 'Alerts to Telegram',
     'con enlace al runbook': 'with a runbook link',
