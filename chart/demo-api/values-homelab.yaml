@@ -30,6 +30,3 @@ topologySpread:
 serviceMonitor:
   enabled: true
   interval: 30s
-
-chaos:
-  errorRate: 0.2
