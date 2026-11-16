@@ -116,3 +116,8 @@ serviceMonitor:
 nodeSelector: {}
 tolerations: []
 affinity: {}
+
+# Chaos engineering: fracción de peticiones que responden 500 a propósito (0 = desactivado).
+# Ejemplo: 0.2 = el 20 % de las peticiones fallan. /health y /metrics nunca fallan.
+chaos:
+  errorRate: 0

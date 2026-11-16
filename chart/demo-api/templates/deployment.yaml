@@ -56,6 +56,11 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
+            {{- with .Values.chaos.errorRate }}
+            # Chaos engineering: fracción de peticiones que responden 500 a propósito
+            - name: CHAOS_ERROR_RATE
+              value: {{ . | quote }}
+            {{- end }}
           ports:
             - name: http
               containerPort: 8000
