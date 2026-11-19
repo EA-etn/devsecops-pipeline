@@ -43,7 +43,7 @@ practices a platform team uses to ship software safely.
 | ✅ **0** | Failed requests tolerated during a rolling update. CI sends continuous traffic and fails on the first error |
 | 🛡️ **2** | Vulnerable images stopped by the security gate on `main` before they were signed or deployed |
 | 🔁 **19** | Deployments to the homelab so far. Every one is a Git commit made by the pipeline, none a manual `kubectl` |
-| 📓 **13** | Real incidents [written up](docs/lessons-learned.md) with root cause and fix |
+| 📓 **14** | Real incidents [written up](docs/lessons-learned.md) with root cause and fix |
 
 <sub>Times are the median of the last 20 pipeline runs (November 2026).</sub>
 
@@ -218,7 +218,7 @@ Five that changed how the project works:
 | After each rollout, both replicas landed on the **same node** | The spread rule also counted the pods being replaced. One line fixed it: `matchLabelKeys: [pod-template-hash]` |
 | The GitOps bot was **blocked by branch protection** | It now pushes with a deploy key scoped to this repo: **least privilege**, with no admin token |
 
-**→ [All 13, with root cause and fix](docs/lessons-learned.md)** · [infographic](docs/diagrams/en/05-incidents.png)
+**→ [All 14, with root cause and fix](docs/lessons-learned.md)** · [infographic](docs/diagrams/en/05-incidents.png)
 
 ## Roadmap
 

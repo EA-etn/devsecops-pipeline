@@ -314,14 +314,22 @@ jobs:
       # ArgoCD vigila Git, no el registro: escribimos en Git la versión exacta a desplegar
       # Sin "[skip ci]": impediría que un tag/release creado sobre este commit ejecute el pipeline.
       # El bucle se evita con paths-ignore (ver "on:").
+      # Se parte siempre del main más reciente: con dos merges seguidos, el commit del bot anterior
+      # cambia la misma línea y un "git pull --rebase" chocaba con él (docs/lessons-learned, #14).
+      # Si main cambia entre el fetch y el push, se repite.
       - name: Actualizar image.tag en values-homelab.yaml
         run: |
           TAG="sha-${GITHUB_SHA::7}"
-          sed -i -E "s|^(  tag:).*|\1 ${TAG}|" chart/demo-api/values-homelab.yaml
-          git diff
-          if git diff --quiet; then echo "Sin cambios"; exit 0; fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -am "chore(gitops): desplegar ${TAG} en homelab"
-          git pull --rebase origin main
-          git push origin HEAD:main
+          for attempt in 1 2 3; do
+            git fetch origin main
+            git reset --hard origin/main
+            sed -i -E "s|^(  tag:).*|\1 ${TAG}|" chart/demo-api/values-homelab.yaml
+            git diff
+            if git diff --quiet; then echo "Sin cambios"; exit 0; fi
+            git commit -am "chore(gitops): desplegar ${TAG} en homelab"
+            if git push origin HEAD:main; then exit 0; fi
+            echo "main cambió durante el push; reintento ${attempt}/3"
+          done
+          exit 1

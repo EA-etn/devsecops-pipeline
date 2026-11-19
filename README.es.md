@@ -43,7 +43,7 @@ mismas prácticas que usa un equipo de plataforma para entregar software de form
 | ✅ **0** | Peticiones fallidas toleradas durante un rolling update. El CI envía tráfico continuo y falla al primer error |
 | 🛡️ **2** | Imágenes vulnerables detenidas por la puerta de seguridad en `main` antes de firmarse o desplegarse |
 | 🔁 **19** | Despliegues en el homelab hasta ahora. Todos son un commit de Git hecho por el pipeline, ninguno un `kubectl` manual |
-| 📓 **13** | Incidentes reales [documentados](docs/lessons-learned.es.md) con su causa y su solución |
+| 📓 **14** | Incidentes reales [documentados](docs/lessons-learned.es.md) con su causa y su solución |
 
 <sub>Los tiempos son la mediana de las últimas 20 ejecuciones del pipeline (noviembre de 2026).</sub>
 
@@ -218,7 +218,7 @@ solución. Cinco que cambiaron cómo funciona el proyecto:
 | Tras cada despliegue, las dos réplicas acababan en el **mismo nodo** | La regla de reparto contaba también los pods que se iban a sustituir. Lo arregló una línea: `matchLabelKeys: [pod-template-hash]` |
 | La protección de rama **bloqueó al bot de GitOps** | Ahora hace push con una deploy key limitada a este repo: **mínimo privilegio**, sin token de administrador |
 
-**→ [Los 13, con causa y solución](docs/lessons-learned.es.md)** · [infografía](docs/diagrams/es/05-incidents.png)
+**→ [Los 14, con causa y solución](docs/lessons-learned.es.md)** · [infografía](docs/diagrams/es/05-incidents.png)
 
 ## Hoja de ruta
 
