@@ -220,18 +220,6 @@ Five that changed how the project works:
 
 **→ [All 14, with root cause and fix](docs/lessons-learned.md)** · [infographic](docs/diagrams/en/05-incidents.png)
 
-## Roadmap
-
-- [x] Secure CI/CD pipeline with multi-arch, signed images
-- [x] Helm chart tested on k3s in every pull request
-- [x] Zero-downtime rollouts: graceful shutdown proven with continuous traffic in CI
-- [x] Homelab k3s cluster (Raspberry Pi + PC) with ArgoCD → [homelab-k3s](https://github.com/EA-etn/homelab-k3s)
-- [x] Observability: Prometheus, Grafana, SLOs and alerts with runbooks → [homelab-k3s](https://github.com/EA-etn/homelab-k3s)
-- [x] Dead man's switch and automatic rebalancing across nodes → [homelab-k3s](https://github.com/EA-etn/homelab-k3s)
-- [ ] Chaos engineering on the homelab (in progress)
-- [ ] Rebuild the homelab from scratch with Ansible (code ready, real rebuild pending)
-- [ ] Cloud infrastructure with Terraform
-
 ## License
 
 [MIT](LICENSE)
