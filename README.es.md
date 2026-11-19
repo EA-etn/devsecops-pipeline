@@ -220,18 +220,6 @@ solución. Cinco que cambiaron cómo funciona el proyecto:
 
 **→ [Los 14, con causa y solución](docs/lessons-learned.es.md)** · [infografía](docs/diagrams/es/05-incidents.png)
 
-## Hoja de ruta
-
-- [x] Pipeline CI/CD seguro con imágenes multi-arquitectura firmadas
-- [x] Helm chart probado en k3s en cada pull request
-- [x] Despliegues sin caída: apagado limpio probado con tráfico continuo en el CI
-- [x] Homelab k3s (Raspberry Pi + PC) con ArgoCD → [homelab-k3s](https://github.com/EA-etn/homelab-k3s)
-- [x] Observabilidad: Prometheus, Grafana, SLOs y alertas con runbooks → [homelab-k3s](https://github.com/EA-etn/homelab-k3s)
-- [x] Dead man's switch y reequilibrio automático entre nodos → [homelab-k3s](https://github.com/EA-etn/homelab-k3s)
-- [ ] Chaos engineering en el homelab (en marcha)
-- [ ] Reconstruir el homelab desde cero con Ansible (código listo, falta la reconstrucción real)
-- [ ] Infraestructura cloud con Terraform
-
 ## Licencia
 
 [MIT](LICENSE)
